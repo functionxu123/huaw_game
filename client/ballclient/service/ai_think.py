@@ -5,12 +5,14 @@ Created on Aug 2, 2019
 @author: sherl
 '''
 import ballclient.service.constants as constants
+import numpy as np
 
 #下面这两个list里面顺序不能动
 direction = ['up',  'down',  'left',  'right']
 items=['meteor', 'tunnel', 'wormhole', 'power', 'enemy']
 wormholes={}#为了方便找到对应的虫洞，这里为  'A':[row, col]
 killing_bonus=10
+round_change=150
 
 class one_item:
     def __init__(self, row, col):
@@ -23,6 +25,11 @@ class one_item:
         #type为类型，另外还要有一个附加的属性记录，如tunnel的方向和waormhole的字母
         self.type=itype
         self.extra=extra
+        
+    def clear_type(self):
+        self.type=None
+        self.extra=None
+        
         
     def get_next2direction(self, row, col, dire, maplen):
         #根据方向计算当前坐标的下一个，附带合理判断
@@ -133,11 +140,35 @@ class My_ai:
         self.__init__()
         global wormholes
         wormholes={}
-        
+    
+    def clear_power_enemy_inview(self, row, col):
+        left=max(0, col- self.map_vision)
+        right=min(self.map_shape[1], col+self.map_vision+1)
+        up=max(0, row-self.map_vision)
+        down=min(self.map_shape[0], row+self.map_vision+1)
+        for i in range(up, down):
+            for j in range(left, right):#清理视野中的power和enemy
+                if self.map_game[i][j].type==items[3] or self.map_game[i][j].type==items[4]:  self.map_game[i][j].clear_type()
+                
+    def set_power(self, power):
+        for i in power:
+            x=int(i['x'])
+            y=int(i['y'])
+            point=int(i['point'])
+            self.map_game[y][x].set_type(items[3], point)
+            
+    def set_enemy(self, enemy):
+        for i in enemy:
+            row=enemy[i][0]
+            col=enemy[i][1]
+            score=int(enemy[i][2])
+            self.map_game[row][col].set_type(items[4], score)
         
     def on_round(self, msg_data):
         my_player={}
         enemy_player={}
+        my_all_player={} #这里包括sleep的player
+        enemy_all_player={}
         
         killing=msg_data['mode']==self.map_force  #是否是优势
         round_id = msg_data['round_id']
@@ -149,18 +180,39 @@ class My_ai:
             sleep=int(i['sleep'])
             x=int(i['x'])
             y=int(i['y'])
-            if teamid==constants.team_id and (not sleep):
-                my_player[id]=[y, x, score]    #以行列保存 [row, col, score]
-            elif teamid!=constants.team_id and (not sleep):
-                enemy_player[id]=[y, x, score]
+            if teamid==constants.team_id:
+                self.clear_power_enemy_inview(y,x)  #注意这里清理了视野中的能量和敌人，用于刷新视野中的物品
+                my_all_player[id]=[y, x, score]
+                if not sleep:
+                    my_player[id]=[y, x, score]    #以行列保存 [row, col, score]
+            else:
+                enemy_all_player[id]=[y, x, score]
+                if (not sleep):
+                    enemy_player[id]=[y, x, score]
+        #设置敌人位置，与其他不同，这里是json处理后的一个map
+        self.set_enemy(enemy_player)
+        #上面已经清理了power。这里只要添上去新的power就行
+        self.set_power(msg_data['power'])
         
-        power=msg_data['power']
-        for i in power:
-            x=int(i['x'])
-            y=int(i['y'])
-            point=int(i['point'])
-            
-
+        #到这里本round的地图已经初始化完成
+        if killing and round_id<round_change-5:
+            #一开始时为优势
+            pass
+        elif killing and round_id>=round_change:
+            #后面的优势,抓人
+            pass
+        elif not killing and round_id<round_change:
+            #前面为劣势，吃分
+            pass
+        else:
+            #后面是劣势，逃命
+            pass
+        
+    def Dijkstra_power(self, startrow, startcol, endrow, endcol):
+        w=abs(endcol-startcol)+1
+        h=abs(endrow-startrow)+1
+        
+        
 
 
 
