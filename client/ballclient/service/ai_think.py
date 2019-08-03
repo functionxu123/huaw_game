@@ -209,8 +209,21 @@ class My_ai:
             pass
         
     def Dijkstra_power(self, startrow, startcol, endrow, endcol):
+        #由输入保证作坐标合理性
         w=abs(endcol-startcol)+1
         h=abs(endrow-startrow)+1
+        
+        
+    #各自实现
+    def kill_atfirst(self):
+        pass
+    
+    def kill_atlast(self):
+        pass
+    def run_atfirst(self):
+        pass
+    def run_atlast(self):
+        pass
         
         
 
