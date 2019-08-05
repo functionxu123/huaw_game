@@ -91,6 +91,7 @@ class My_ai:
         self.map_vision=3   #视野大小
         self.map_force='beat'   #think   'beat'
         self.last_enemy={}
+        self.killing=False
 
         
     def set_shape(self, h,w):
@@ -158,7 +159,9 @@ class My_ai:
             y=int(i['y'])
             point=int(i['point'])
             self.map_game[y][x].set_type(items[3], point)
-            
+    
+    def on_moveto(self, row, col):
+        return self.map_game[row][col].on_movetothis(self.map_game, self.killing)
         
     def on_round(self, msg_data):
         my_player={}
@@ -166,7 +169,7 @@ class My_ai:
         my_all_player={} #这里包括sleep的player
         enemy_all_player={}
         
-        killing=msg_data['mode']==self.map_force  #是否是优势
+        self.killing=msg_data['mode']==self.map_force  #是否是优势
         round_id = msg_data['round_id']
         players  = msg_data['players']
         for i in players:
@@ -193,17 +196,17 @@ class My_ai:
         #到这里本round的地图已经初始化完成
         '''
         self.map_game:地图，包括tunnel,meteor,wormhole,视野中的power
-        killing:是否为优势
+        self.killing:是否为优势
         my_player:我方鲲  id:[row, col, score]
         enemy_player:视野中敌方鲲
         '''
-        if killing and round_id<round_change-5:
+        if self.killing and round_id<round_change-5:
             #一开始时为优势
             pass
-        elif killing and round_id>=round_change:
+        elif self.killing and round_id>=round_change:
             #后面的优势,抓人
             pass
-        elif not killing and round_id<round_change:
+        elif not self.killing and round_id<round_change:
             #前面为劣势，吃分
             pass
         else:
@@ -213,6 +216,7 @@ class My_ai:
         self.last_enemy=enemy_player
         
     def Dijkstra_power(self, startrow, startcol, endrow, endcol):
+        max_val=10000
         #由输入保证作坐标合理性
         w=abs(endcol-startcol)+1
         h=abs(endrow-startrow)+1
@@ -223,10 +227,33 @@ class My_ai:
         if startcol>endcol:
             forward_col=-1
             
-        kep=np.zeros([h, w])
+        kep=np.ones([h, w])*max_val
         use=np.zeros([h, w])
         row_st=startrow-min(endrow, startrow)
         col_st=startcol-min(endcol, startcol)
+        
+        kep[row_st][col_st]=0
+        
+        for i in range(h):
+            for j in range(w):
+                min_tep=max_val
+                for k in range(h):
+                    for l in range(w):
+                        if not use[k][l] and kep[k][l]<min_tep:
+                            min_tep=kep[k][l]
+                            ind_kep=[k, l]
+                use[ind_kep[0]][ind_kep[1]]=1
+                #update
+                if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
+                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0]-1, min(endcol, startcol)+ind_kep[1])
+                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1
+                        
+                
+        
+        
+        
         
     #各自实现
     def kill_atfirst(self):
