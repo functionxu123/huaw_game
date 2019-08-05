@@ -90,6 +90,8 @@ class My_ai:
         self.map_game=[]  #地图元素
         self.map_vision=3   #视野大小
         self.map_force='beat'   #think   'beat'
+        self.last_enemy={}
+
         
     def set_shape(self, h,w):
         self.map_shape=[int(h), int(w)]  #y,x
@@ -157,12 +159,6 @@ class My_ai:
             point=int(i['point'])
             self.map_game[y][x].set_type(items[3], point)
             
-    def set_enemy(self, enemy):
-        for i in enemy:
-            row=enemy[i][0]
-            col=enemy[i][1]
-            score=int(enemy[i][2])
-            self.map_game[row][col].set_type(items[4], score)
         
     def on_round(self, msg_data):
         my_player={}
@@ -190,11 +186,17 @@ class My_ai:
                 if (not sleep):
                     enemy_player[id]=[y, x, score]
         #设置敌人位置，与其他不同，这里是json处理后的一个map
-        self.set_enemy(enemy_player)
+        #self.set_enemy(enemy_player)
         #上面已经清理了power。这里只要添上去新的power就行
         self.set_power(msg_data['power'])
         
         #到这里本round的地图已经初始化完成
+        '''
+        self.map_game:地图，包括tunnel,meteor,wormhole,视野中的power
+        killing:是否为优势
+        my_player:我方鲲  id:[row, col, score]
+        enemy_player:视野中敌方鲲
+        '''
         if killing and round_id<round_change-5:
             #一开始时为优势
             pass
@@ -208,11 +210,23 @@ class My_ai:
             #后面是劣势，逃命
             pass
         
+        self.last_enemy=enemy_player
+        
     def Dijkstra_power(self, startrow, startcol, endrow, endcol):
         #由输入保证作坐标合理性
         w=abs(endcol-startcol)+1
         h=abs(endrow-startrow)+1
-        
+        forward_row=1
+        if startrow>endrow:
+            forward_row=-1
+        forward_col=1
+        if startcol>endcol:
+            forward_col=-1
+            
+        kep=np.zeros([h, w])
+        use=np.zeros([h, w])
+        row_st=startrow-min(endrow, startrow)
+        col_st=startcol-min(endcol, startcol)
         
     #各自实现
     def kill_atfirst(self):
