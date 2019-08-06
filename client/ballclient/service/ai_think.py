@@ -236,6 +236,7 @@ class My_ai:
         
         for i in range(h):
             for j in range(w):
+                
                 min_tep=max_val
                 for k in range(h):
                     for l in range(w):
