@@ -245,11 +245,31 @@ class My_ai:
                             ind_kep=[k, l]
                 use[ind_kep[0]][ind_kep[1]]=1
                 #update
+                #up
                 if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
                     move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0]-1, min(endcol, startcol)+ind_kep[1])
                     if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
                         if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
                             kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1
+                #down
+                if ind_kep[0]<h-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
+                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0]+1, min(endcol, startcol)+ind_kep[1])
+                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1                            
+                #left
+                if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
+                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0], min(endcol, startcol)+ind_kep[1]-1)
+                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1                            
+                #right
+                if ind_kep[1]<w-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
+                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0], min(endcol, startcol)+ind_kep[1]+1)
+                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1
+                            
                         
                 
         
