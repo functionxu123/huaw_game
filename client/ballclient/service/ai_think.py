@@ -60,7 +60,7 @@ class one_item:
             #if self.on_step_this is not None: return self.on_step_this
             tep=self.get_next2direction(self.row, self.col, self.extra, len(mapitem))
             if tep is None: return tep,0
-            return mapitem[tep[0], tep[1]].on_movetothis(mapitem)
+            return mapitem[tep[0], tep[1]].on_movetothis(mapitem, killing)
                 
         elif self.type==items[2]:#wormhole
             #if self.on_step_this is not None: return self.on_step_this
