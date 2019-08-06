@@ -215,61 +215,127 @@ class My_ai:
         
         self.last_enemy=enemy_player
         
-    def Dijkstra_power(self, startrow, startcol, endrow, endcol):
+    def Dijkstra_global_path(self, startrow, startcol, endrow, endcol):
+        max_val=10000
+        kep=np.ones(self.map_shape)*max_val
+        use=np.zeros(self.map_shape)
+        path=np.ones([self.map_shape[0], self.map_shape[1],3])*(-1)  #该点前一点的坐标及前一点得到该点的移动方向
+        
+        kep[startrow][startcol]=0
+        for i in range(self.map_shape[0]*self.map_shape[1]):
+            min_tep=max_val
+            for k in range(self.map_shape[0]):
+                for l in range(self.map_shape[1]):
+                    if not use[k][l] and kep[k][l]<min_tep:
+                        min_tep=kep[k][l]
+                        ind_kep=[k, l]
+            use[ind_kep[0]][ind_kep[1]]=1
+            #已经无法继续了
+            if min_tep>=max_val: break
+            #update
+            #up
+            if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
+                move_ind,gain=self.on_moveto(ind_kep[0]-1, ind_kep[1])
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]>min_tep+1:
+                        kep[move_ind[0]][move_ind[1]]=min_tep+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=0
+            #down
+            if ind_kep[0]<self.map_shape[0]-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
+                move_ind,gain=self.on_moveto(ind_kep[0]+1, ind_kep[1])
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]>min_tep+1:
+                        kep[move_ind[0]][move_ind[1]]=min_tep+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=1                  
+            #left
+            if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
+                move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]-1)
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]>min_tep+1:
+                        kep[move_ind[0]][move_ind[1]]=min_tep+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=2                   
+            #right
+            if ind_kep[1]<self.map_shape[1]-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
+                move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]+1)
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]>min_tep+1:
+                        kep[move_ind[0]][move_ind[1]]=min_tep+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=3
+        
+        #process path
+        
+            
+    
+        
+    def Dijkstra_local_path(self, startrow, startcol, endrow, endcol):
         max_val=10000
         #由输入保证作坐标合理性
         w=abs(endcol-startcol)+1
         h=abs(endrow-startrow)+1
-        forward_row=1
-        if startrow>endrow:
-            forward_row=-1
-        forward_col=1
-        if startcol>endcol:
-            forward_col=-1
-            
+        
         kep=np.ones([h, w])*max_val
         use=np.zeros([h, w])
+        path=np.ones([h,w,3])*(-1)  #该点前一点的坐标及前一点得到该点的移动方向
+        
         row_st=startrow-min(endrow, startrow)
         col_st=startcol-min(endcol, startcol)
         
+        row_end=endrow-min(endrow, startrow)
+        col_end=endcol-min(endcol, startcol)
+        
         kep[row_st][col_st]=0
         
-        for i in range(h):
-            for j in range(w):
-                
-                min_tep=max_val
-                for k in range(h):
-                    for l in range(w):
-                        if not use[k][l] and kep[k][l]<min_tep:
-                            min_tep=kep[k][l]
-                            ind_kep=[k, l]
-                use[ind_kep[0]][ind_kep[1]]=1
-                #update
-                #up
-                if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
-                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0]-1, min(endcol, startcol)+ind_kep[1])
-                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
-                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
-                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1
-                #down
-                if ind_kep[0]<h-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
-                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0]+1, min(endcol, startcol)+ind_kep[1])
-                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
-                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
-                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1                            
-                #left
-                if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
-                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0], min(endcol, startcol)+ind_kep[1]-1)
-                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
-                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
-                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1                            
-                #right
-                if ind_kep[1]<w-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
-                    move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0], min(endcol, startcol)+ind_kep[1]+1)
-                    if move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
-                        if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
-                            kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1
-                            
+        for i in range(h*w):
+            #先找到min值和坐标
+            min_tep=max_val
+            for k in range(h):
+                for l in range(w):
+                    if not use[k][l] and kep[k][l]<min_tep:
+                        min_tep=kep[k][l]
+                        ind_kep=[k, l]
+            use[ind_kep[0]][ind_kep[1]]=1
+            #已经无法继续了
+            if min_tep>=max_val: break
+            #update
+            #up
+            if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
+                move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0]-1, min(endcol, startcol)+ind_kep[1])
+                if move_ind is not None and move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                    if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                        kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][0:2]=ind_kep
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][2]=0
+            #down
+            if ind_kep[0]<h-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
+                move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0]+1, min(endcol, startcol)+ind_kep[1])
+                if move_ind is not None and move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                    if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                        kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1    
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][0:2]=ind_kep    
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][2]=1                    
+            #left
+            if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
+                move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0], min(endcol, startcol)+ind_kep[1]-1)
+                if move_ind is not None and move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                    if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                        kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1         
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][0:2]=ind_kep
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][2]=2                   
+            #right
+            if ind_kep[1]<w-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
+                move_ind,gain=self.on_moveto(min(endrow, startrow)+ind_kep[0], min(endcol, startcol)+ind_kep[1]+1)
+                if move_ind is not None and move_ind[0]>=min(endrow, startrow) and move_ind[1]<=max(endrow, startrow) and move_ind[1]>=min(endcol, startcol) and move_ind[1]<=max(endcol, startcol):#矩形里面
+                    if kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]>min_tep+1:
+                        kep[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)]=min_tep+1
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][0:2]=ind_kep
+                        path[move_ind[0]-min(endrow, startrow)][move_ind[1]-min(endcol, startcol)][2]=3
+        
+        #process path
+        
                         
                 
         
