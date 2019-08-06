@@ -215,11 +215,76 @@ class My_ai:
         
         self.last_enemy=enemy_player
         
-    def Dijkstra_global_path(self, startrow, startcol, endrow, endcol):
+    def Dijkstra_global_rate(self, startrow, startcol, rate=1.0):
+        #按比例来计算路径长与power的和，得到最优解，其中rate=1时，完全按照路径，rate=0时完全按照power
         max_val=10000
         kep=np.ones(self.map_shape)*max_val
         use=np.zeros(self.map_shape)
         path=np.ones([self.map_shape[0], self.map_shape[1],3])*(-1)  #该点前一点的坐标及前一点得到该点的移动方向
+        power_gain=np.ones(self.map_shape)*(-max_val)  #power初始化为负数，因为其应往较大处发展
+        
+        kep[startrow][startcol]=0  #这里是两个初始化
+        power_gain[startrow][startcol]=0
+        
+        for i in range(self.map_shape[0]*self.map_shape[1]):
+            min_tep=max_val
+            for k in range(self.map_shape[0]):
+                for l in range(self.map_shape[1]):
+                    if not use[k][l] and kep[k][l]*rate-power_gain[k][l]*(1-rate)  < min_tep:
+                        min_tep=kep[k][l]*rate-power_gain[k][l]*(1-rate)
+                        ind_kep=[k, l]
+            use[ind_kep[0]][ind_kep[1]]=1
+            #已经无法继续了
+            if min_tep>=max_val-1: break
+            #update
+            #up
+            if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
+                move_ind,gain=self.on_moveto(ind_kep[0]-1, ind_kep[1])
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
+                        kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=0
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain
+            #down
+            if ind_kep[0]<self.map_shape[0]-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
+                move_ind,gain=self.on_moveto(ind_kep[0]+1, ind_kep[1])
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
+                        kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=1
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain       
+            #left
+            if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
+                move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]-1)
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
+                        kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=2
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain         
+            #right
+            if ind_kep[1]<self.map_shape[1]-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
+                move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]+1)
+                if move_ind is not None :#里面
+                    if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
+                        kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
+                        path[move_ind[0]][move_ind[1]][0:2]=ind_kep
+                        path[move_ind[0]][move_ind[1]][2]=3
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain
+        
+        #process path
+        return kep, path, power_gain
+        
+        
+        
+    def Dijkstra_global_path(self, startrow, startcol):
+        max_val=10000
+        kep=np.ones(self.map_shape)*max_val
+        use=np.zeros(self.map_shape)
+        path=np.ones([self.map_shape[0], self.map_shape[1],3])*(-1)  #该点前一点的坐标及前一点得到该点的移动方向
+        power_gain=np.zeros(self.map_shape)
         
         kep[startrow][startcol]=0
         for i in range(self.map_shape[0]*self.map_shape[1]):
@@ -241,6 +306,7 @@ class My_ai:
                         kep[move_ind[0]][move_ind[1]]=min_tep+1
                         path[move_ind[0]][move_ind[1]][0:2]=ind_kep
                         path[move_ind[0]][move_ind[1]][2]=0
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain
             #down
             if ind_kep[0]<self.map_shape[0]-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
                 move_ind,gain=self.on_moveto(ind_kep[0]+1, ind_kep[1])
@@ -248,7 +314,8 @@ class My_ai:
                     if kep[move_ind[0]][move_ind[1]]>min_tep+1:
                         kep[move_ind[0]][move_ind[1]]=min_tep+1
                         path[move_ind[0]][move_ind[1]][0:2]=ind_kep
-                        path[move_ind[0]][move_ind[1]][2]=1                  
+                        path[move_ind[0]][move_ind[1]][2]=1           
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain       
             #left
             if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
                 move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]-1)
@@ -256,7 +323,8 @@ class My_ai:
                     if kep[move_ind[0]][move_ind[1]]>min_tep+1:
                         kep[move_ind[0]][move_ind[1]]=min_tep+1
                         path[move_ind[0]][move_ind[1]][0:2]=ind_kep
-                        path[move_ind[0]][move_ind[1]][2]=2                   
+                        path[move_ind[0]][move_ind[1]][2]=2          
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain         
             #right
             if ind_kep[1]<self.map_shape[1]-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
                 move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]+1)
@@ -265,9 +333,10 @@ class My_ai:
                         kep[move_ind[0]][move_ind[1]]=min_tep+1
                         path[move_ind[0]][move_ind[1]][0:2]=ind_kep
                         path[move_ind[0]][move_ind[1]][2]=3
+                        power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain
         
         #process path
-        
+        return kep, path, power_gain
             
     
         
