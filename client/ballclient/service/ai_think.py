@@ -6,6 +6,7 @@ Created on Aug 2, 2019
 '''
 import ballclient.service.constants as constants
 import numpy as np
+import random
 
 #下面这两个list里面顺序不能动
 direction = ['up',  'down',  'left',  'right']
@@ -218,10 +219,11 @@ class My_ai:
     def Dijkstra_global_rate(self, startrow, startcol, rate=1.0):
         #按比例来计算路径长与power的和，得到最优解，其中rate=1时，完全按照路径，rate=0时完全按照power
         max_val=10000
-        kep=np.ones(self.map_shape)*max_val
-        use=np.zeros(self.map_shape)
-        path=np.ones([self.map_shape[0], self.map_shape[1],3])*(-1)  #该点前一点的坐标及前一点得到该点的移动方向
-        power_gain=np.ones(self.map_shape)*(-max_val)  #power初始化为负数，因为其应往较大处发展
+        
+        kep=np.ones(self.map_shape, dtype=np.int32)*max_val
+        use=np.zeros(self.map_shape, dtype=np.int8)
+        path=np.ones([self.map_shape[0], self.map_shape[1],3], dtype=np.int32)*(-1)  #该点前一点的坐标及前一点得到该点的移动方向
+        power_gain=np.ones(self.map_shape, dtype=np.int32)*(-max_val)  #power初始化为负数，因为其应往较大处发展
         
         kep[startrow][startcol]=0  #这里是两个初始化
         power_gain[startrow][startcol]=0
@@ -405,8 +407,17 @@ class My_ai:
         
         #process path
         
-                        
-                
+    def show_path(self, path, endrow, endcol):
+        #path为[h, w, 3]的矩阵，3 is [pre_row, pre_col, pre_direction]
+        ret=np.zeros(path.shape[:2]  ,dtype=np.int8)
+        tep=[endrow, endcol]
+        dire=direction[random.randint(0, 3)]
+        while tep[0]>=0 and tep[1]>=0:
+            ret[tep[0]][tep[1]]=1
+            tep=path[tep[0]][tep[1]][:2]
+            dire=direction[path[tep[0]][tep[1]][-1]]
+        return ret,dire
+        
         
         
         
@@ -427,7 +438,27 @@ class My_ai:
 
 
 if __name__ == '__main__':
-    pass
+    AI=My_ai()
+    AI.set_shape(6, 6)
+    AI.set_map_meteor([{'x':2, 'y':2},
+                       {'x':3, 'y':2},
+                       {'x':4, 'y':2},
+                       {'x':4, 'y':1}])
+    #AI.set_map_tunnel
+    #
+    AI.set_power([{'x':1, 'y':3, 'point':2},
+                  {'x':2, 'y':3, 'point':1},
+                  {'x':2, 'y':1, 'point':2},
+                  {'x':2, 'y':0, 'point':3},
+                  {'x':3, 'y':0, 'point':2},
+                  {'x':4, 'y':0, 'point':4},
+                  {'x':5, 'y':0, 'point':5},])
+    
+    plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.6)  #其中rate=1时，完全按照路径，rate=0时完全按照power
+    print plen
+    print AI.show_path(path, 2, 5)
+    print gain
+    
 
 
 
