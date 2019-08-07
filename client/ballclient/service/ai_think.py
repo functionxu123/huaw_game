@@ -7,10 +7,11 @@ Created on Aug 2, 2019
 import ballclient.service.constants as constants
 import numpy as np
 import random
+from sqlalchemy.sql.expression import false
 
 #下面这两个list里面顺序不能动
 direction = ['up',  'down',  'left',  'right']
-items=['meteor', 'tunnel', 'wormhole', 'power', 'enemy']
+items=['meteor', 'tunnel', 'wormhole', 'power']
 wormholes={}#为了方便找到对应的虫洞，这里为  'A':[row, col]
 killing_bonus=10
 round_change=150
@@ -21,15 +22,25 @@ class one_item:
         self.col=col
         self.type=None
         self.extra=None
+        self.with_enemy=False
+        self.enemyscore=0
         
     def set_type(self, itype, extra=None):
         #type为类型，另外还要有一个附加的属性记录，如tunnel的方向和waormhole的字母
         self.type=itype
         self.extra=extra
         
+    def set_enemy(self, score):
+        self.with_enemy=True
+        self.enemyscore=int(score)
+        
     def clear_type(self):
         self.type=None
         self.extra=None
+        
+    def clear_enemy(self):
+        self.with_enemy=False
+        self.enemyscore=0
         
         
     def get_next2direction(self, row, col, dire, maplen):
@@ -68,17 +79,24 @@ class one_item:
             ano=self.extra.upper()
             if self.extra.isupper():#if upper char
                 ano=self.extra.lower()
+            otherside=wormholes[ano]
             
-            return wormholes[ano],0
+            if self.with_enemy or mapitem[otherside[0] ][ otherside[1]].with_enemy:
+                if killing:
+                    return otherside,killing_bonus+self.enemyscore+mapitem[otherside[0] ][ otherside[1]].enemyscore
+                else:
+                    return None, -killing_bonus*3
+            return otherside , 0
+                
                 
         elif self.type==items[3]:#power
             return [self.row, self.col],int(self.extra)
             
-        elif self.type==items[4]:#enemy
+        elif self.with_enemy:#enemy
             if killing:
-                return [self.row, self.col],killing_bonus
+                return [self.row, self.col],killing_bonus+self.enemyscore
             else:
-                return None, -killing_bonus
+                return None, -killing_bonus*3
 
         else:#空的
             return [self.row, self.col],0
@@ -152,7 +170,8 @@ class My_ai:
         down=min(self.map_shape[0], row+self.map_vision+1)
         for i in range(up, down):
             for j in range(left, right):#清理视野中的power和enemy
-                if self.map_game[i][j].type==items[3] or self.map_game[i][j].type==items[4]:  self.map_game[i][j].clear_type()
+                if self.map_game[i][j].type==items[3]: self.map_game[i][j].clear_type()
+                if self.map_game[i][j].with_enemy:     self.map_game[i][j].clear_enemy()
                 
     def set_power(self, power):
         for i in power:
@@ -160,6 +179,13 @@ class My_ai:
             y=int(i['y'])
             point=int(i['point'])
             self.map_game[y][x].set_type(items[3], point)
+            
+    def set_enemy(self, enemy_player):
+        for i in enemy_player:
+            row=enemy_player[i][0]
+            col=enemy_player[i][1]
+            score=enemy_player[i][2]
+            self.map_game[row][col].set_enemy(score)
     
     def on_moveto(self, row, col):
         return self.map_game[row][col].on_movetothis(self.map_game, self.killing)
@@ -190,7 +216,7 @@ class My_ai:
                 if (not sleep):
                     enemy_player[id]=[y, x, score]
         #设置敌人位置，与其他不同，这里是json处理后的一个map
-        #self.set_enemy(enemy_player)
+        self.set_enemy(enemy_player)
         #上面已经清理了power。这里只要添上去新的power就行
         self.set_power(msg_data['power'])
         
@@ -201,9 +227,16 @@ class My_ai:
         my_player:我方鲲  id:[row, col, score]
         enemy_player:视野中敌方鲲
         '''
+        ret={}
         if self.killing and round_id<round_change-5:
             #一开始时为优势
-            pass
+            for i in my_player:
+                plen, path, gain=self.Dijkstra_global_rate(my_player[i][0], my_player[i][1], rate=0.4)  #其中rate=1时，完全按照路径
+                if np.max(gain)<=0:
+                    pass
+                    
+                
+            
         elif self.killing and round_id>=round_change:
             #后面的优势,抓人
             pass
@@ -414,8 +447,10 @@ class My_ai:
         dire=direction[random.randint(0, 3)]
         while tep[0]>=0 and tep[1]>=0:
             ret[tep[0]][tep[1]]=1
+            if path[tep[0]][tep[1]][2]>=0:
+                dire=direction[path[tep[0]][tep[1]][2]]
             tep=path[tep[0]][tep[1]][:2]
-            dire=direction[path[tep[0]][tep[1]][-1]]
+            #print tep,dire
         return ret,dire
         
         
@@ -454,7 +489,7 @@ if __name__ == '__main__':
                   {'x':4, 'y':0, 'point':4},
                   {'x':5, 'y':0, 'point':5},])
     
-    plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.6)  #其中rate=1时，完全按照路径，rate=0时完全按照power
+    plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.9)  #其中rate=1时，完全按照路径，rate=0时完全按照power
     print plen
     print AI.show_path(path, 2, 5)
     print gain
