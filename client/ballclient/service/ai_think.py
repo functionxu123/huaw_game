@@ -412,10 +412,11 @@ class My_ai:
         ret=np.zeros(path.shape[:2]  ,dtype=np.int8)
         tep=[endrow, endcol]
         dire=direction[random.randint(0, 3)]
-        while tep[0]>=0 and tep[1]>=0:
+        while tep[0]>=0 and tep[0]<path.shape[0] and tep[1]<path.shape[1] and tep[1]>=0:
+            dire=direction[path[tep[0]][tep[1]][-1]]
             ret[tep[0]][tep[1]]=1
             tep=path[tep[0]][tep[1]][:2]
-            dire=direction[path[tep[0]][tep[1]][-1]]
+            
         return ret,dire
         
         
@@ -454,7 +455,7 @@ if __name__ == '__main__':
                   {'x':4, 'y':0, 'point':4},
                   {'x':5, 'y':0, 'point':5},])
     
-    plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.6)  #其中rate=1时，完全按照路径，rate=0时完全按照power
+    plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.5)  #其中rate=1时，完全按照路径，rate=0时完全按照power
     print plen
     print AI.show_path(path, 2, 5)
     print gain
