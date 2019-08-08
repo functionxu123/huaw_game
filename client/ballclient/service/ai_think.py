@@ -7,6 +7,7 @@ Created on Aug 2, 2019
 import ballclient.service.constants as constants
 import numpy as np
 import random
+from sqlalchemy.sql.expression import false
 
 #下面这两个list里面顺序不能动
 direction = ['up',  'down',  'left',  'right']
@@ -449,7 +450,10 @@ class My_ai:
             if path[tep[0]][tep[1]][2]>=0:
                 dire=direction[path[tep[0]][tep[1]][2]]
             tep=path[tep[0]][tep[1]][:2]
+<<<<<<< HEAD
             
+=======
+>>>>>>> branch 'master' of https://github.com/functionxu123/huaw_game.git
             #print tep,dire
         return ret,dire
         
@@ -489,7 +493,11 @@ if __name__ == '__main__':
                   {'x':4, 'y':0, 'point':4},
                   {'x':5, 'y':0, 'point':5},])
     
+<<<<<<< HEAD
     plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.5)  #其中rate=1时，完全按照路径，rate=0时完全按照power
+=======
+    plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.9)  #其中rate=1时，完全按照路径，rate=0时完全按照power
+>>>>>>> branch 'master' of https://github.com/functionxu123/huaw_game.git
     print plen
     print AI.show_path(path, 2, 5)
     print gain
