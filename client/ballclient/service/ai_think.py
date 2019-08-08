@@ -194,6 +194,33 @@ class My_ai:
     
     def on_moveto(self, row, col):
         return self.map_game[row][col].on_movetothis(self.map_game, self.killing)
+    
+    
+    def make_decision(self, my_player, rate):
+        ret= {}
+        for i in my_player:
+            plen, path, gain=self.Dijkstra_global_rate(my_player[i][0], my_player[i][1], rate=rate)  #其中rate=1时，完全按照路径
+            if np.max(gain)<=0:
+                mostclose=abs(plen[0][0]-round_believe)
+                ind_kep=[0,0]
+                for ii in range(plen.shape[0]):
+                    for j in range(plen.shape[1]):
+                        if abs(plen[ii][j]-round_believe)<mostclose:
+                            mostclose=abs(plen[ii][j]-round_believe)
+                            ind_kep=[ii, j]
+                _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
+                   
+            else:
+                mostclose=gain[0][0]
+                ind_kep=[0,0]
+                for ii in range(plen.shape[0]):
+                    for j in range(plen.shape[1]):
+                        if gain[ii][j]>mostclose:
+                            mostclose=gain[ii][j]
+                            ind_kep=[ii, j]
+                _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
+            ret[i]=dire
+        return ret
         
     def on_round(self, msg_data):
         my_player={}
@@ -233,42 +260,20 @@ class My_ai:
         enemy_player:视野中敌方鲲
         '''
         ret={}
-        if True or (self.killing and round_id<round_change-5):
+        if (self.killing and round_id<round_change-5):
             #一开始时为优势
-            for i in my_player:
-                plen, path, gain=self.Dijkstra_global_rate(my_player[i][0], my_player[i][1], rate=0.4)  #其中rate=1时，完全按照路径
-                if np.max(gain)<=0:
-                    mostclose=abs(plen[0][0]-round_believe)
-                    ind_kep=[0,0]
-                    for ii in range(plen.shape[0]):
-                        for j in range(plen.shape[1]):
-                            if abs(plen[ii][j]-round_believe)<mostclose:
-                                mostclose=abs(plen[ii][j]-round_believe)
-                                ind_kep=[ii, j]
-                    _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
-                   
-                else:
-                    mostclose=gain[0][0]
-                    ind_kep=[0,0]
-                    for ii in range(plen.shape[0]):
-                        for j in range(plen.shape[1]):
-                            if gain[ii][j]>mostclose:
-                                mostclose=gain[ii][j]
-                                ind_kep=[ii, j]
-                    _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
-                ret[i]=dire
-                    
-                
-            
+            ret= self.make_decision(my_player, 0.5)  #其中rate=1时，完全按照路径
+ 
         elif self.killing and round_id>=round_change:
             #后面的优势,抓人
-            pass
+            ret= self.make_decision(my_player, 0.8)
         elif not self.killing and round_id<round_change:
             #前面为劣势，吃分
-            pass
+            ret= self.make_decision(my_player, 0.2)
         else:
             #后面是劣势，逃命
-            pass
+            ret= self.make_decision(my_player, 0.4)
+
         
         self.last_enemy=enemy_player
         return ret
@@ -476,20 +481,7 @@ class My_ai:
             tep=path[tep[0]][tep[1]][:2]
         return ret,dire
         
-        
-        
-        
-        
-    #各自实现
-    def kill_atfirst(self):
-        pass
     
-    def kill_atlast(self):
-        pass
-    def run_atfirst(self):
-        pass
-    def run_atlast(self):
-        pass
         
         
 
