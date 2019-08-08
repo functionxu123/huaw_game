@@ -57,7 +57,7 @@ def start(ip=None, port=None):
     except socket.error:
         print "can not connect with server. %s,%s" % (ip, port)
     except Exception as e:
-        print "some error happend. the receive data:"
+        print "some error happend. the receive data:",e
         print data
     finally:
         if _socket:

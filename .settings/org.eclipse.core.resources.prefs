@@ -1,3 +1,7 @@
 eclipse.preferences.version=1
+encoding//client/ballclient/comunicate/client.py=utf8
+encoding//client/ballclient/main.py=utf8
 encoding//client/ballclient/service/ai_think.py=utf-8
 encoding//client/ballclient/service/service.py=utf8
+encoding//client/test/server.py=utf8
+encoding//client/test/service.py=utf8

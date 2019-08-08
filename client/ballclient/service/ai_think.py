@@ -109,7 +109,7 @@ class one_item:
 
 class My_ai:
     def __init__(self):
-        self.map_shape=[]   #高和宽
+        self.map_shape=[15, 15]   #高和宽
         self.map_game=[]  #地图元素
         self.map_vision=3   #视野大小
         self.map_force='beat'   #think   'beat'
