@@ -7,7 +7,6 @@ Created on Aug 2, 2019
 import ballclient.service.constants as constants
 import numpy as np
 import random
-from sqlalchemy.sql.expression import false
 
 #下面这两个list里面顺序不能动
 direction = ['up',  'down',  'left',  'right']
@@ -15,6 +14,7 @@ items=['meteor', 'tunnel', 'wormhole', 'power']
 wormholes={}#为了方便找到对应的虫洞，这里为  'A':[row, col]
 killing_bonus=10
 round_change=150
+round_believe=10
 
 class one_item:
     def __init__(self, row, col):
@@ -24,6 +24,7 @@ class one_item:
         self.extra=None
         self.with_enemy=False
         self.enemyscore=0
+        self.last_seen=-round_believe-1
         
     def set_type(self, itype, extra=None):
         #type为类型，另外还要有一个附加的属性记录，如tunnel的方向和waormhole的字母
@@ -33,6 +34,9 @@ class one_item:
     def set_enemy(self, score):
         self.with_enemy=True
         self.enemyscore=int(score)
+        
+    def update_seen(self, roundid):
+        self.last_seen=roundid
         
     def clear_type(self):
         self.type=None
@@ -163,7 +167,7 @@ class My_ai:
         global wormholes
         wormholes={}
     
-    def clear_power_enemy_inview(self, row, col):
+    def clear_power_enemy_inview(self, row, col, round_id):
         left=max(0, col- self.map_vision)
         right=min(self.map_shape[1], col+self.map_vision+1)
         up=max(0, row-self.map_vision)
@@ -172,6 +176,7 @@ class My_ai:
             for j in range(left, right):#清理视野中的power和enemy
                 if self.map_game[i][j].type==items[3]: self.map_game[i][j].clear_type()
                 if self.map_game[i][j].with_enemy:     self.map_game[i][j].clear_enemy()
+                self.map_game[i][j].update_seen(round_id)  #顺便更新下上次看到的信息
                 
     def set_power(self, power):
         for i in power:
@@ -207,7 +212,7 @@ class My_ai:
             x=int(i['x'])
             y=int(i['y'])
             if teamid==constants.team_id:
-                self.clear_power_enemy_inview(y,x)  #注意这里清理了视野中的能量和敌人，用于刷新视野中的物品
+                self.clear_power_enemy_inview(y,x, round_id)  #注意这里清理了视野中的能量和敌人，用于刷新视野中的物品
                 my_all_player[id]=[y, x, score]
                 if not sleep:
                     my_player[id]=[y, x, score]    #以行列保存 [row, col, score]
@@ -228,12 +233,30 @@ class My_ai:
         enemy_player:视野中敌方鲲
         '''
         ret={}
-        if self.killing and round_id<round_change-5:
+        if True or (self.killing and round_id<round_change-5):
             #一开始时为优势
             for i in my_player:
                 plen, path, gain=self.Dijkstra_global_rate(my_player[i][0], my_player[i][1], rate=0.4)  #其中rate=1时，完全按照路径
                 if np.max(gain)<=0:
-                    pass
+                    mostclose=abs(plen[0][0]-round_believe)
+                    ind_kep=[0,0]
+                    for ii in range(plen.shape[0]):
+                        for j in range(plen.shape[1]):
+                            if abs(plen[ii][j]-round_believe)<mostclose:
+                                mostclose=abs(plen[ii][j]-round_believe)
+                                ind_kep=[ii, j]
+                    _,dire=self.show_path(path, ii, j)
+                    ret[i]=dire
+                else:
+                    mostclose=gain[0][0]
+                    ind_kep=[0,0]
+                    for ii in range(plen.shape[0]):
+                        for j in range(plen.shape[1]):
+                            if gain[ii][j]>mostclose:
+                                mostclose=gain[ii][j]
+                                ind_kep=[ii, j]
+                    _,dire=self.show_path(path, ii, j)
+                    ret[i]=dire
                     
                 
             
@@ -248,6 +271,7 @@ class My_ai:
             pass
         
         self.last_enemy=enemy_player
+        return ret
         
     def Dijkstra_global_rate(self, startrow, startcol, rate=1.0):
         #按比例来计算路径长与power的和，得到最优解，其中rate=1时，完全按照路径，rate=0时完全按照power
@@ -450,11 +474,6 @@ class My_ai:
             if path[tep[0]][tep[1]][2]>=0:
                 dire=direction[path[tep[0]][tep[1]][2]]
             tep=path[tep[0]][tep[1]][:2]
-<<<<<<< HEAD
-            
-=======
->>>>>>> branch 'master' of https://github.com/functionxu123/huaw_game.git
-            #print tep,dire
         return ret,dire
         
         
@@ -491,13 +510,12 @@ if __name__ == '__main__':
                   {'x':2, 'y':0, 'point':3},
                   {'x':3, 'y':0, 'point':2},
                   {'x':4, 'y':0, 'point':4},
-                  {'x':5, 'y':0, 'point':5},])
+                  {'x':5, 'y':0, 'point':5},
+                  {'x':1, 'y':0, 'point':3},
+                  {'x':1, 'y':2, 'point':3},])
     
-<<<<<<< HEAD
     plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.5)  #其中rate=1时，完全按照路径，rate=0时完全按照power
-=======
-    plen, path, gain=AI.Dijkstra_global_rate(2, 0, rate=0.9)  #其中rate=1时，完全按照路径，rate=0时完全按照power
->>>>>>> branch 'master' of https://github.com/functionxu123/huaw_game.git
+
     print plen
     print AI.show_path(path, 2, 5)
     print gain
