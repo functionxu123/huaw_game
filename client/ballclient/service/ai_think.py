@@ -246,7 +246,7 @@ class My_ai:
                                 mostclose=abs(plen[ii][j]-round_believe)
                                 ind_kep=[ii, j]
                     _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
-                    ret[i]=dire
+                   
                 else:
                     mostclose=gain[0][0]
                     ind_kep=[0,0]
@@ -256,7 +256,7 @@ class My_ai:
                                 mostclose=gain[ii][j]
                                 ind_kep=[ii, j]
                     _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
-                    ret[i]=dire
+                ret[i]=dire
                     
                 
             
