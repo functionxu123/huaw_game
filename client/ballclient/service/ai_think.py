@@ -205,10 +205,10 @@ class My_ai:
             if np.max(gain)<=0:
                 mostclose=round_believe
                 ind_kep=[random.randint(0, plen.shape[0]-1),  random.randint(0, plen.shape[1]-1)]
-                for ii in range(plen.shape[0]):
+                for ii in range(4):#plen.shape[0]
                     for j in range(plen.shape[1]):
                         rand_ind=[random.randint(0, plen.shape[0]-1),  random.randint(0, plen.shape[1]-1)]
-                        if abs(roundid-self.map_game[rand_ind[0]][rand_ind[1]].last_seen)>=round_believe and abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)<mostclose:
+                        if gain[rand_ind[0]][rand_ind[1]]>=0 and abs(roundid-self.map_game[rand_ind[0]][rand_ind[1]].last_seen)>=round_believe and abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)<mostclose:
                             mostclose=abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)
                             ind_kep=rand_ind
                 _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
