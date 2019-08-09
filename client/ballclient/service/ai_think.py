@@ -69,6 +69,7 @@ class one_item:
         #当从其他地方挪到本位置上的时候，最终会落到哪里
         #return None:来不到   [row, col]:坐标
         #后一个代表move的收益
+        
         if self.type==items[0]:#meteor
             return None,0
         
@@ -203,6 +204,7 @@ class My_ai:
         for i in my_player:
             plen, path, gain=self.Dijkstra_global_rate(my_player[i][0], my_player[i][1], rate=rate)  #其中rate=1时，完全按照路径
             if np.max(gain)<=0:
+                print "no power in sight,random to safe area:"
                 mostclose=round_believe
                 ind_kep=[random.randint(0, plen.shape[0]-1),  random.randint(0, plen.shape[1]-1)]
                 for ii in range(4):#plen.shape[0]
@@ -212,8 +214,9 @@ class My_ai:
                             mostclose=abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)
                             ind_kep=rand_ind
                 _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
-                   
+                
             else:
+                print "heading to area that most gain:"
                 mostclose=gain[0][0]
                 ind_kep=[0,0]
                 for ii in range(plen.shape[0]):
@@ -222,6 +225,8 @@ class My_ai:
                             mostclose=gain[ii][j]
                             ind_kep=[ii, j]
                 _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
+                
+            print "next move:",dire
             ret[i]=dire
         print 'round:',roundid,'->running time:',time.time()-sttime
         return ret
@@ -255,6 +260,7 @@ class My_ai:
         self.set_enemy(enemy_player)
         #上面已经清理了power。这里只要添上去新的power就行
         if "power" in msg_data: self.set_power(msg_data['power'])
+        else: print "round with no power!!"
         
         #到这里本round的地图已经初始化完成
         '''
@@ -285,6 +291,7 @@ class My_ai:
     def Dijkstra_global_rate(self, startrow, startcol, rate=1.0):
         #按比例来计算路径长与power的和，得到最优解，其中rate=1时，完全按照路径，rate=0时完全按照power
         sttime=time.time()
+        print "start once DJ algo cal:"
         max_val=10000
         
         kep=np.ones(self.map_shape, dtype=np.int32)*max_val
@@ -303,12 +310,16 @@ class My_ai:
                         min_tep=kep[k][l]*rate-power_gain[k][l]*(1-rate)
                         ind_kep=[k, l]
             use[ind_kep[0]][ind_kep[1]]=1
+            
+            print "h*w finding:",ind_kep,min_tep
             #已经无法继续了
             if min_tep>=max_val-1: break
             #update
             #up
             if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
+                print "up",":on moving to:",[ind_kep[0]-1, ind_kep[1]]
                 move_ind,gain=self.on_moveto(ind_kep[0]-1, ind_kep[1])
+                print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
                         kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
@@ -317,7 +328,9 @@ class My_ai:
                         power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain
             #down
             if ind_kep[0]<self.map_shape[0]-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
+                print "down",":on moving to:",[ind_kep[0]+1, ind_kep[1]]
                 move_ind,gain=self.on_moveto(ind_kep[0]+1, ind_kep[1])
+                print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
                         kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
@@ -326,7 +339,9 @@ class My_ai:
                         power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain       
             #left
             if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
+                print "left",":on moving to:",[ind_kep[0], ind_kep[1]-1]
                 move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]-1)
+                print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
                         kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
@@ -335,7 +350,9 @@ class My_ai:
                         power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain         
             #right
             if ind_kep[1]<self.map_shape[1]-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
+                print "right",":on moving to:",[ind_kep[0], ind_kep[1]+1]
                 move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]+1)
+                print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
                         kep[move_ind[0]][move_ind[1]]=kep[ind_kep[0]][ind_kep[1]]+1
