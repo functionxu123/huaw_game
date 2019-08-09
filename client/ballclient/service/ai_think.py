@@ -14,7 +14,7 @@ items=['meteor', 'tunnel', 'wormhole', 'power']
 wormholes={}#为了方便找到对应的虫洞，这里为  'A':[row, col]
 killing_bonus=10
 round_change=150
-round_believe=10
+round_believe=6
 
 class one_item:
     def __init__(self, row, col):
@@ -196,18 +196,19 @@ class My_ai:
         return self.map_game[row][col].on_movetothis(self.map_game, self.killing)
     
     
-    def make_decision(self, my_player, rate):
+    def make_decision(self, my_player, rate, roundid):
         ret= {}
         for i in my_player:
             plen, path, gain=self.Dijkstra_global_rate(my_player[i][0], my_player[i][1], rate=rate)  #其中rate=1时，完全按照路径
             if np.max(gain)<=0:
-                mostclose=abs(plen[0][0]-round_believe)
-                ind_kep=[0,0]
+                mostclose=round_believe
+                ind_kep=[random.randint(0, plen.shape[0]-1),  random.randint(0, plen.shape[1]-1)]
                 for ii in range(plen.shape[0]):
                     for j in range(plen.shape[1]):
-                        if abs(plen[ii][j]-round_believe)<mostclose:
-                            mostclose=abs(plen[ii][j]-round_believe)
-                            ind_kep=[ii, j]
+                        rand_ind=[random.randint(0, plen.shape[0]-1),  random.randint(0, plen.shape[1]-1)]
+                        if abs(roundid-self.map_game[rand_ind[0]][rand_ind[1]].last_seen)>=round_believe and abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)<mostclose:
+                            mostclose=abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)
+                            ind_kep=rand_ind
                 _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
                    
             else:
@@ -262,17 +263,17 @@ class My_ai:
         ret={}
         if (self.killing and round_id<round_change-5):
             #一开始时为优势
-            ret= self.make_decision(my_player, 0.5)  #其中rate=1时，完全按照路径
+            ret= self.make_decision(my_player, 0.5, round_id)  #其中rate=1时，完全按照路径
  
         elif self.killing and round_id>=round_change:
             #后面的优势,抓人
-            ret= self.make_decision(my_player, 0.8)
+            ret= self.make_decision(my_player, 0.8, round_id)
         elif not self.killing and round_id<round_change:
             #前面为劣势，吃分
-            ret= self.make_decision(my_player, 0.2)
+            ret= self.make_decision(my_player, 0.2, round_id)
         else:
             #后面是劣势，逃命
-            ret= self.make_decision(my_player, 0.4)
+            ret= self.make_decision(my_player, 0.4, round_id)
 
         
         self.last_enemy=enemy_player
