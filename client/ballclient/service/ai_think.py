@@ -6,7 +6,7 @@ Created on Aug 2, 2019
 '''
 import ballclient.service.constants as constants
 import numpy as np
-import random
+import random,time
 
 #下面这两个list里面顺序不能动
 direction = ['up',  'down',  'left',  'right']
@@ -76,7 +76,7 @@ class one_item:
             #if self.on_step_this is not None: return self.on_step_this
             tep=self.get_next2direction(self.row, self.col, self.extra, len(mapitem))
             if tep is None: return tep,0
-            return mapitem[tep[0], tep[1]].on_movetothis(mapitem, killing)
+            return mapitem[tep[0]][tep[1]].on_movetothis(mapitem, killing)
                 
         elif self.type==items[2]:#wormhole
             #if self.on_step_this is not None: return self.on_step_this
@@ -139,7 +139,7 @@ class My_ai:
         for i in mapstr:
             x=int(i['x'])
             y=int(i['y'])
-            dire=i('direction').strip()
+            dire=i['direction'].strip()
             self.map_game[y][x].set_type(items[1], dire)
             
             
@@ -149,12 +149,13 @@ class My_ai:
         for i in mapstr:
             x=int(i['x'])
             y=int(i['y'])
-            name=i('name').strip()
+            name=i['name'].strip()
             self.map_game[y][x].set_type(items[2], name)
             wormholes[name]=[y, x]    #这里为  'A':[row, col]
             
     def set_team(self, teamstr):
         for i in teamstr:
+            print i
             teamid=int(i['id'])
             players=i['players']
             force=i['force']
@@ -197,6 +198,7 @@ class My_ai:
     
     
     def make_decision(self, my_player, rate, roundid):
+        sttime=time.time()
         ret= {}
         for i in my_player:
             plen, path, gain=self.Dijkstra_global_rate(my_player[i][0], my_player[i][1], rate=rate)  #其中rate=1时，完全按照路径
@@ -221,6 +223,7 @@ class My_ai:
                             ind_kep=[ii, j]
                 _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
             ret[i]=dire
+        print 'round:',roundid,'->running time:',time.time()-sttime
         return ret
         
     def on_round(self, msg_data):
@@ -251,7 +254,7 @@ class My_ai:
         #设置敌人位置，与其他不同，这里是json处理后的一个map
         self.set_enemy(enemy_player)
         #上面已经清理了power。这里只要添上去新的power就行
-        self.set_power(msg_data['power'])
+        if "power" in msg_data: self.set_power(msg_data['power'])
         
         #到这里本round的地图已经初始化完成
         '''
@@ -275,12 +278,13 @@ class My_ai:
             #后面是劣势，逃命
             ret= self.make_decision(my_player, 0.4, round_id)
 
-        
+        print ret
         self.last_enemy=enemy_player
         return ret
         
     def Dijkstra_global_rate(self, startrow, startcol, rate=1.0):
         #按比例来计算路径长与power的和，得到最优解，其中rate=1时，完全按照路径，rate=0时完全按照power
+        sttime=time.time()
         max_val=10000
         
         kep=np.ones(self.map_shape, dtype=np.int32)*max_val
@@ -339,6 +343,7 @@ class My_ai:
                         path[move_ind[0]][move_ind[1]][2]=3
                         power_gain[move_ind[0]][move_ind[1]]=power_gain[ind_kep[0]][ind_kep[1]]+gain
         
+        print "once DJ algothim time:",time.time()-sttime
         #process path
         return kep, path, power_gain
         
