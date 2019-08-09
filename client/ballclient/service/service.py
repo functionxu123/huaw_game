@@ -25,10 +25,10 @@ def leg_start(msg):
     print "msg_name:%s" % msg['msg_name']
     print "map_width:%s" % msg['msg_data']['map']['width']
     print "map_height:%s" % msg['msg_data']['map']['height']
-    AI.set_shape( msg['msg_data']['map']['height'].strip(),   msg['msg_data']['map']['width'].strip())
+    AI.set_shape( msg['msg_data']['map']['height'],   msg['msg_data']['map']['width'])
     
     print "vision:%s" % msg['msg_data']['map']['vision']
-    AI.set_vision(msg['msg_data']['map']['vision'].strip())
+    AI.set_vision(msg['msg_data']['map']['vision'])
     
     print "meteor:%s" % msg['msg_data']['map']['meteor']
     AI.set_map_meteor(msg['msg_data']['map']['meteor'])
