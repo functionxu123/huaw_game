@@ -502,6 +502,7 @@ class My_ai:
             ret[tep[0]][tep[1]]=1
             if path[tep[0]][tep[1]][2]>=0:
                 dire=direction[path[tep[0]][tep[1]][2]]
+            else: break
             tep=path[tep[0]][tep[1]][:2]
         return ret,dire
         
