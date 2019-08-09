@@ -213,7 +213,7 @@ class My_ai:
                         if gain[rand_ind[0]][rand_ind[1]]>=0 and abs(roundid-self.map_game[rand_ind[0]][rand_ind[1]].last_seen)>=round_believe and abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)<mostclose:
                             mostclose=abs(plen[rand_ind[0]][rand_ind[1]]-round_believe)
                             ind_kep=rand_ind
-                _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
+                pp,dire=self.show_path(path, ind_kep[0], ind_kep[1])
                 
             else:
                 print "heading to area that most gain:"
@@ -224,9 +224,10 @@ class My_ai:
                         if gain[ii][j]>mostclose:
                             mostclose=gain[ii][j]
                             ind_kep=[ii, j]
-                _,dire=self.show_path(path, ind_kep[0], ind_kep[1])
+                pp,dire=self.show_path(path, ind_kep[0], ind_kep[1])
                 
             print "next move:",dire
+            print pp
             ret[i]=dire
         print 'round:',roundid,'->running time:',time.time()-sttime
         return ret
