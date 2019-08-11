@@ -240,9 +240,10 @@ class My_ai:
         my_all_player={} #这里包括sleep的player
         enemy_all_player={}
         
+        players={}
         self.killing=msg_data['mode']==self.map_force  #是否是优势
         round_id = msg_data['round_id']
-        players  = msg_data['players']
+        if 'players' in msg_data:  players  = msg_data['players']
         for i in players:
             id=int(i['id'])
             teamid=int(i['team'])
@@ -505,12 +506,14 @@ class My_ai:
         tep=[endrow, endcol]
         dire=direction[random.randint(0, 3)]
         while tep[0]>=0 and tep[0]<path.shape[0] and tep[1]<path.shape[1] and tep[1]>=0:
+            if ret[tep[0]][tep[1]]: break
             ret[tep[0]][tep[1]]=1
             if path[tep[0]][tep[1]][2]>=0:
                 dire=direction[path[tep[0]][tep[1]][2]]
             else: break
-            if path[tep[0]][tep[1]][0]==tep[0] and path[tep[0]][tep[1]][1]==tep[1]:  break
+        
             tep=path[tep[0]][tep[1]][:2]
+            
         return ret,dire
         
     
