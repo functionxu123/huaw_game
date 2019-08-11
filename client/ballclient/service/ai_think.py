@@ -78,6 +78,7 @@ class one_item:
             tep=self.get_next2direction(self.row, self.col, self.extra, len(mapitem))
             if tep is None: return tep,0
             return mapitem[tep[0]][tep[1]].on_movetothis(mapitem, killing)
+
                 
         elif self.type==items[2]:#wormhole
             #if self.on_step_this is not None: return self.on_step_this
@@ -91,6 +92,7 @@ class one_item:
                     return otherside,killing_bonus+self.enemyscore+mapitem[otherside[0] ][ otherside[1]].enemyscore
                 else:
                     return None, -killing_bonus*3
+            
             return otherside , 0
                 
                 
@@ -320,6 +322,7 @@ class My_ai:
             if ind_kep[0]>0 and (not use[ind_kep[0]-1][ind_kep[1]]):
                 print "up",":on moving to:",[ind_kep[0]-1, ind_kep[1]]
                 move_ind,gain=self.on_moveto(ind_kep[0]-1, ind_kep[1])
+                if (move_ind is not None) and gain<=0 and move_ind[0]==ind_kep[0] and move_ind[1]==ind_kep[1]:  move_ind=None                
                 print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
@@ -331,6 +334,7 @@ class My_ai:
             if ind_kep[0]<self.map_shape[0]-1 and (not use[ind_kep[0]+1][ind_kep[1]]):
                 print "down",":on moving to:",[ind_kep[0]+1, ind_kep[1]]
                 move_ind,gain=self.on_moveto(ind_kep[0]+1, ind_kep[1])
+                if (move_ind is not None) and gain<=0 and move_ind[0]==ind_kep[0] and move_ind[1]==ind_kep[1]:  move_ind=None
                 print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
@@ -342,6 +346,7 @@ class My_ai:
             if ind_kep[1]>0 and (not use[ind_kep[0]][ind_kep[1]-1]):
                 print "left",":on moving to:",[ind_kep[0], ind_kep[1]-1]
                 move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]-1)
+                if (move_ind is not None) and gain<=0 and move_ind[0]==ind_kep[0] and move_ind[1]==ind_kep[1]:  move_ind=None
                 print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
@@ -353,6 +358,7 @@ class My_ai:
             if ind_kep[1]<self.map_shape[1]-1 and (not use[ind_kep[0]][ind_kep[1]+1]):
                 print "right",":on moving to:",[ind_kep[0], ind_kep[1]+1]
                 move_ind,gain=self.on_moveto(ind_kep[0], ind_kep[1]+1)
+                if (move_ind is not None) and gain<=0 and move_ind[0]==ind_kep[0] and move_ind[1]==ind_kep[1]:  move_ind=None
                 print move_ind,gain
                 if move_ind is not None :#里面
                     if kep[move_ind[0]][move_ind[1]]*rate-(1-rate)*power_gain[move_ind[0]][move_ind[1]]>rate*(kep[ind_kep[0]][ind_kep[1]]+1)-(1-rate)*(power_gain[ind_kep[0]][ind_kep[1]]+gain):
@@ -503,6 +509,7 @@ class My_ai:
             if path[tep[0]][tep[1]][2]>=0:
                 dire=direction[path[tep[0]][tep[1]][2]]
             else: break
+            if path[tep[0]][tep[1]][0]==tep[0] and path[tep[0]][tep[1]][1]==tep[1]:  break
             tep=path[tep[0]][tep[1]][:2]
         return ret,dire
         
