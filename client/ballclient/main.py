@@ -10,7 +10,7 @@ import sys
 if __name__ == "__main__":
     print sys.argv
     if len(sys.argv) != 4:
-        print "The parameters has error. (TeamID server_ip server_port)"
+        print "The parameters has error. (TeamID server_ip server_port)",sys.argv
         exit()
     team_id = sys.argv[1]
     server_ip = sys.argv[2]
